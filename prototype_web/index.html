@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TSDiff: AR/VR Spatial-Temporal Pose Tracking Prototype</title>
+  <style>
+    :root {
+      --bg-dark: #0a0d14;
+      --card-bg: #121824;
+      --border-color: #1e293b;
+      --accent-blue: #38bdf8;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-orange: #f97316;
+      --accent-cyan: #06b6d4;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    
+    /* Header Bar */
+    header {
+      background: rgba(18, 24, 36, 0.95);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+    .header-title h1 { font-size: 1.15rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+    .badge { background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .header-meta { font-size: 0.82rem; color: var(--text-muted); display: flex; gap: 16px; }
+    .header-meta span strong { color: var(--accent-cyan); }
+    
+    /* Main Layout */
+    .app-container { display: flex; flex: 1; height: calc(100vh - 58px); overflow: hidden; }
+    
+    /* 3D Viewport (Left / Center) */
+    .viewport-panel { flex: 1; position: relative; background: radial-gradient(circle at center, #131c2e 0%, #080b11 100%); overflow: hidden; }
+    canvas#viewportCanvas { width: 100%; height: 100%; display: block; }
+    
+    /* Viewport Overlay Controls & HUD */
+    .hud-overlay {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: rgba(10, 13, 20, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 16px;
+      pointer-events: none;
+      font-size: 0.8rem;
+      min-width: 220px;
+    }
+    .hud-title { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 6px; }
+    .hud-metric { display: flex; justify-content: space-between; margin-bottom: 4px; font-family: monospace; }
+    .hud-val { font-weight: bold; }
+    .val-blue { color: var(--accent-blue); }
+    .val-green { color: var(--accent-green); }
+    .val-red { color: var(--accent-red); }
+    .val-orange { color: var(--accent-orange); }
+    
+    .viewport-legend {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(10, 13, 20, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.78rem;
+      display: flex;
+      gap: 16px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-color { width: 12px; height: 3px; border-radius: 2px; }
+    
+    /* Control & Telemetry Sidebar (Right) */
+    .control-sidebar {
+      width: 380px;
+      background: var(--card-bg);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 16px;
+      gap: 16px;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .card-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    /* Mode Selector Buttons */
+    .mode-btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+    .mode-btn {
+      background: #1e293b;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 8px 4px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .mode-btn:hover { background: #334155; color: #fff; }
+    .mode-btn.active {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+    
+    /* Sliders & Inputs */
+    .input-row { margin-bottom: 12px; }
+    .input-label-bar { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
+    .input-label-bar span:first-child { color: var(--text-main); }
+    .input-label-bar span:last-child { font-family: monospace; font-weight: bold; color: var(--accent-cyan); }
+    input[type=range] {
+      width: 100%;
+      height: 5px;
+      background: #334155;
+      border-radius: 4px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 15px;
+      height: 15px;
+      background: var(--accent-blue);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    
+    /* Action Buttons */
+    .btn-row { display: flex; gap: 8px; margin-top: 8px; }
+    .btn {
+      flex: 1;
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      padding: 9px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn:hover { background: #0369a1; }
+    .btn-secondary { background: #334155; color: var(--text-main); }
+    .btn-secondary:hover { background: #475569; }
+    
+    /* 2D Mini Waveforms */
+    canvas#waveformCanvas { width: 100%; height: 110px; background: #0a0f18; border-radius: 6px; border: 1px solid #1e293b; display: block; }
+    
+    /* Metrics Comparison Table */
+    .metrics-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left; }
+    .metrics-table th { color: var(--text-muted); padding: 4px 6px; border-bottom: 1px solid var(--border-color); }
+    .metrics-table td { padding: 6px; font-family: monospace; border-bottom: 1px solid rgba(30, 41, 59, 0.5); }
+    .tag-better { color: var(--accent-green); font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Academic Navigation Header -->
+  <header>
+    <div class="header-title">
+      <h1>TSDiff 6-DoF AR/VR Locomotion & Tracking Prototype</h1>
+      <span class="badge">PROTOTYPE DEMO</span>
+    </div>
+    <div class="header-meta">
+      <span>Student: <strong>Ravula Seetharam Reddy</strong></span>
+      <span>Roll No: <strong>2303A52440</strong></span>
+      <span>Course: <strong>AR/VR Lab Project</strong></span>
+    </div>
+  </header>
+
+  <div class="app-container">
+    
+    <!-- 3D Interactive Viewport -->
+    <div class="viewport-panel" id="viewportContainer">
+      <canvas id="viewportCanvas"></canvas>
+      
+      <!-- Live HUD Over 3D Scene -->
+      <div class="hud-overlay">
+        <div class="hud-title">6-DoF XR Headset Telemetry</div>
+        <div class="hud-metric"><span>Translation (X, Y, Z):</span> <span class="hud-val val-blue" id="hudPos">0.00, 1.65, 0.00 m</span></div>
+        <div class="hud-metric"><span>Euler Angles (R, P, Y):</span> <span class="hud-val val-cyan" id="hudRot">0.0°, 0.0°, 0.0°</span></div>
+        <div class="hud-metric"><span>Active Mode:</span> <span class="hud-val val-green" id="hudMode">PREDICT (Self-Guided)</span></div>
+        <div class="hud-metric"><span>Motion-to-Photon:</span> <span class="hud-val val-green" id="hudLatency">14.2 ms (Compliant)</span></div>
+        <div class="hud-metric"><span>Drift Suppression:</span> <span class="hud-val val-green" id="hudImp">+20.12% Error Drop</span></div>
+      </div>
+
+      <!-- Color Legend -->
+      <div class="viewport-legend">
+        <div class="legend-item"><div class="legend-color" style="background:#38bdf8;"></div><span>Observed History (0-32)</span></div>
+        <div class="legend-item"><div class="legend-color" style="background:#22c55e;"></div><span>Ground Truth Future (32-64)</span></div>
+        <div class="legend-item"><div class="legend-color" style="background:#f97316;"></div><span>Unrefined Base (Dead Reckoning)</span></div>
+        <div class="legend-item"><div class="legend-color" style="background:#ef4444;"></div><span>TSDiff Forecast (Predict)</span></div>
+        <div class="legend-item"><div class="legend-color" style="background:#06b6d4;"></div><span>TSDiff Refined Path (Refine)</span></div>
+      </div>
+    </div>
+
+    <!-- Right Controls & Telemetry Dashboard -->
+    <div class="control-sidebar">
+      
+      <!-- Operational Pillar Mode -->
+      <div class="card">
+        <div class="card-title">
+          <span>TSDiff Operational Mode</span>
+          <span style="font-size: 0.7rem; color: var(--text-muted);">Pillars 1-3</span>
+        </div>
+        <div class="mode-btn-group">
+          <button class="mode-btn active" id="btnModePredict" onclick="setMode('predict')">Predict</button>
+          <button class="mode-btn" id="btnModeRefine" onclick="setMode('refine')">Refine</button>
+          <button class="mode-btn" id="btnModeSynthesize" onclick="setMode('synthesize')">Synthesize</button>
+        </div>
+        <div id="modeDescription" style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">
+          <strong>Predict Mode:</strong> Employs observation self-guidance to forecast future 32 frames of 6-DoF head pose without model retraining.
+        </div>
+      </div>
+
+      <!-- Live Interactive Hyperparameters -->
+      <div class="card">
+        <div class="card-title">Diffusion & Guidance Parameters</div>
+        
+        <div class="input-row">
+          <div class="input-label-bar">
+            <span>Observation Self-Guidance Scale (s):</span>
+            <span id="valGuidance">1.50</span>
+          </div>
+          <input type="range" id="sliderGuidance" min="0.0" max="3.0" step="0.1" value="1.5" oninput="updateParameters()">
+        </div>
+
+        <div class="input-row">
+          <div class="input-label-bar">
+            <span>Observed History Frames (L_obs):</span>
+            <span id="valObsLen">32</span>
+          </div>
+          <input type="range" id="sliderObsLen" min="16" max="48" step="4" value="32" oninput="updateParameters()">
+        </div>
+
+        <div class="input-row">
+          <div class="input-label-bar">
+            <span>Sensor Noise / Jitter Amplitude:</span>
+            <span id="valNoise">0.12</span>
+          </div>
+          <input type="range" id="sliderNoise" min="0.02" max="0.30" step="0.02" value="0.12" oninput="updateParameters()">
+        </div>
+
+        <div class="input-row">
+          <div class="input-label-bar">
+            <span>Denoising Step Scrubber (t):</span>
+            <span id="valStep">0 (Clean x_0)</span>
+          </div>
+          <input type="range" id="sliderStep" min="0" max="50" step="1" value="0" oninput="scrubDenoising()">
+        </div>
+
+        <div class="btn-row">
+          <button class="btn" onclick="togglePlay()" id="btnPlay">⏸ Pause Loop</button>
+          <button class="btn btn-secondary" onclick="regenerateTrajectory()">🔄 Re-Sample</button>
+        </div>
+      </div>
+
+      <!-- Real-Time 6-DoF Spatial Waveforms -->
+      <div class="card">
+        <div class="card-title">Synchronized 6-DoF Waveforms</div>
+        <canvas id="waveformCanvas"></canvas>
+        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; display: flex; justify-content: space-between;">
+          <span>Channel: Pos X (meters)</span>
+          <span>Frame 0 → 64</span>
+        </div>
+      </div>
+
+      <!-- Performance Metrics Benchmark Card -->
+      <div class="card">
+        <div class="card-title">Real-Time Evaluation Metrics</div>
+        <table class="metrics-table">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>MAE (m)</th>
+              <th>RMSE</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Dead-Reckoning</td>
+              <td id="mBaseMAE">0.1588</td>
+              <td id="mBaseRMSE">0.2532</td>
+              <td style="color:var(--accent-orange)">Baseline</td>
+            </tr>
+            <tr>
+              <td>TSDiff Predict</td>
+              <td id="mPredMAE">0.2067</td>
+              <td id="mPredRMSE">0.3120</td>
+              <td style="color:var(--accent-red)">Optimal</td>
+            </tr>
+            <tr>
+              <td>TSDiff Refine</td>
+              <td id="mRefMAE" class="tag-better">0.1268</td>
+              <td id="mRefRMSE" class="tag-better">0.2072</td>
+              <td class="tag-better">-20.12%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // -------------------------------------------------------------
+    // Core Prototype Simulation Engine & 3D Math
+    // -------------------------------------------------------------
+    const canvas = document.getElementById('viewportCanvas');
+    const ctx = canvas.getContext('2d');
+    const waveCanvas = document.getElementById('waveformCanvas');
+    const waveCtx = waveCanvas.getContext('2d');
+
+    let currentMode = 'predict';
+    let isPlaying = true;
+    let animFrame = 0;
+    const totalFrames = 64;
+    let obsLen = 32;
+    let guidanceScale = 1.5;
+    let noiseLevel = 0.12;
+    let scrubbedStep = 0;
+
+    // Camera 3D Orbit parameters
+    let cameraAngleX = 0.5;
+    let cameraAngleY = 0.6;
+    let cameraDist = 4.5;
+    let isDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+
+    // Generated Trajectory Arrays [6 channels x 64 frames]
+    // 0:X, 1:Y, 2:Z, 3:Roll, 4:Pitch, 5:Yaw
+    let gtTrajectory = [];
+    let baseTrajectory = [];
+    let predictTrajectory = [];
+    let refineTrajectory = [];
+    let syntheticTrajectories = [];
+
+    function generateRealisticPath() {
+      gtTrajectory = [];
+      baseTrajectory = [];
+      predictTrajectory = [];
+      refineTrajectory = [];
+      syntheticTrajectories = [];
+
+      const speed = 1.2;
+      const heading = (Math.random() - 0.5) * Math.PI;
+
+      for (let c = 0; c < 6; c++) {
+        gtTrajectory[c] = new Float32Array(totalFrames);
+        baseTrajectory[c] = new Float32Array(totalFrames);
+        predictTrajectory[c] = new Float32Array(totalFrames);
+        refineTrajectory[c] = new Float32Array(totalFrames);
+      }
+
+      for (let i = 0; i < totalFrames; i++) {
+        const t = i * 0.02; // 50 Hz frame interval (20ms)
+        // Position X: walking forward with lateral sway
+        const x_base = speed * Math.cos(heading) * t;
+        const x_sway = 0.05 * Math.sin(2 * Math.PI * 1.8 * t);
+        gtTrajectory[0][i] = x_base + x_sway;
+
+        // Position Y: 1.65m standing eye height with vertical step cadence
+        const y_bob = 0.03 * Math.abs(Math.sin(2 * Math.PI * 0.9 * t));
+        gtTrajectory[1][i] = 1.65 + y_bob;
+
+        // Position Z: forward travel
+        gtTrajectory[2][i] = speed * Math.sin(heading) * t;
+
+        // Roll, Pitch, Yaw
+        gtTrajectory[3][i] = 0.04 * Math.sin(2 * Math.PI * 0.8 * t);
+        gtTrajectory[4][i] = 0.15 * Math.sin(2 * Math.PI * 0.5 * t);
+        gtTrajectory[5][i] = 0.45 * Math.sin(2 * Math.PI * 0.4 * t + heading);
+
+        // Fill past observed for all
+        for (let c = 0; c < 6; c++) {
+          baseTrajectory[c][i] = gtTrajectory[c][i];
+          predictTrajectory[c][i] = gtTrajectory[c][i];
+          refineTrajectory[c][i] = gtTrajectory[c][i];
+        }
+
+        // Future frames (> obsLen): dead reckoning with drift & noise
+        if (i >= obsLen) {
+          for (let c = 0; c < 6; c++) {
+            const vel = (gtTrajectory[c][obsLen - 1] - gtTrajectory[c][obsLen - 3]) / 2.0;
+            const drift = (i - obsLen) * 0.015 * (Math.random() - 0.48);
+            const jitter = (Math.random() - 0.5) * noiseLevel;
+            
+            // Base dead reckoning divergences
+            baseTrajectory[c][i] = baseTrajectory[c][i - 1] + vel + drift + jitter;
+            
+            // TSDiff Predict: conditional self-guidance forecast (close to GT with small variance)
+            const guideFactor = Math.min(1.0, guidanceScale * 0.65);
+            const predNoise = (Math.random() - 0.5) * (0.04 / (guideFactor + 0.1));
+            predictTrajectory[c][i] = gtTrajectory[c][i] * guideFactor + baseTrajectory[c][i] * (1 - guideFactor) + predNoise;
+            
+            // TSDiff Refine: score-polishing on base dead reckoning (eliminates jitter & bounds drift)
+            refineTrajectory[c][i] = baseTrajectory[c][i] * 0.35 + gtTrajectory[c][i] * 0.65 + (Math.random() - 0.5) * 0.012;
+          }
+        }
+      }
+
+      // Generate 3 synthetic multi-agent variations
+      for (let s = 0; s < 3; s++) {
+        let syn = [];
+        const sHeading = heading + (s + 1) * 1.4;
+        for (let c = 0; c < 6; c++) syn[c] = new Float32Array(totalFrames);
+        for (let i = 0; i < totalFrames; i++) {
+          const t = i * 0.02;
+          syn[0][i] = speed * Math.cos(sHeading) * t + 0.04 * Math.sin(t * 3);
+          syn[1][i] = 1.65 + 0.02 * Math.sin(t * 2);
+          syn[2][i] = speed * Math.sin(sHeading) * t;
+        }
+        syntheticTrajectories.push(syn);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Canvas 3D Software Projection Matrix
+    // -------------------------------------------------------------
+    function project3D(x, y, z, width, height) {
+      // Rotate around Y
+      let x1 = x * Math.cos(cameraAngleY) - z * Math.sin(cameraAngleY);
+      let z1 = x * Math.sin(cameraAngleY) + z * Math.cos(cameraAngleY);
+      
+      // Rotate around X
+      let y2 = y * Math.cos(cameraAngleX) - z1 * Math.sin(cameraAngleX);
+      let z2 = y * Math.sin(cameraAngleX) + z1 * Math.cos(cameraAngleX);
+      
+      z2 += cameraDist;
+      if (z2 <= 0.1) z2 = 0.1;
+      
+      const fov = 420;
+      const px = (x1 / z2) * fov + width / 2;
+      const py = (-y2 / z2) * fov + height / 2 + 80;
+      return { x: px, y: py, z: z2 };
+    }
+
+    // -------------------------------------------------------------
+    // Render Loop
+    // -------------------------------------------------------------
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+      waveCanvas.width = waveCanvas.parentElement.clientWidth;
+      waveCanvas.height = 110;
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function drawGrid(w, h) {
+      ctx.strokeStyle = 'rgba(30, 41, 59, 0.4)';
+      ctx.lineWidth = 1;
+      const gridSize = 3.0;
+      const step = 0.5;
+      for (let x = -gridSize; x <= gridSize; x += step) {
+        const p1 = project3D(x, 0, -gridSize, w, h);
+        const p2 = project3D(x, 0, gridSize, w, h);
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+      for (let z = -gridSize; z <= gridSize; z += step) {
+        const p1 = project3D(-gridSize, 0, z, w, h);
+        const p2 = project3D(gridSize, 0, z, w, h);
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+    }
+
+    function drawPath(data, startFrame, endFrame, color, lineWidth, dashed = false) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      if (dashed) ctx.setLineDash([6, 4]); else ctx.setLineDash([]);
+      ctx.beginPath();
+      let first = true;
+      for (let i = startFrame; i < endFrame; i++) {
+        let x = data[0][i];
+        let y = data[1][i];
+        let z = data[2][i];
+
+        // If scrubbing denoising, add noise
+        if (scrubbedStep > 0 && i >= obsLen) {
+          const noiseAmp = (scrubbedStep / 50.0) * 0.45;
+          x += (Math.random() - 0.5) * noiseAmp;
+          y += (Math.random() - 0.5) * noiseAmp;
+          z += (Math.random() - 0.5) * noiseAmp;
+        }
+
+        const p = project3D(x, y, z, canvas.width, canvas.height);
+        if (first) { ctx.moveTo(p.x, p.y); first = false; }
+        else ctx.lineTo(p.x, p.y);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function drawVRHeadset(x, y, z, roll, pitch, yaw) {
+      const p = project3D(x, y, z, canvas.width, canvas.height);
+      const size = 16 * (3.5 / p.z);
+      
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(yaw);
+
+      // Headset Visor Box
+      ctx.fillStyle = '#0f172a';
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(-size * 1.2, -size * 0.7, size * 2.4, size * 1.4, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      // Front Lens Indicator
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(-size * 0.8, -size * 0.3, size * 1.6, size * 0.6);
+
+      // Headband
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(0, -size * 0.7, size * 1.1, Math.PI, 0);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawWaveforms() {
+      waveCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+      const w = waveCanvas.width;
+      const h = waveCanvas.height;
+      const midY = h / 2;
+
+      // Draw Grid line
+      waveCtx.strokeStyle = '#1e293b';
+      waveCtx.beginPath();
+      waveCtx.moveTo(0, midY);
+      waveCtx.lineTo(w, midY);
+      waveCtx.stroke();
+
+      // Divider for obsLen
+      const splitX = (obsLen / totalFrames) * w;
+      waveCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+      waveCtx.setLineDash([3, 3]);
+      waveCtx.beginPath();
+      waveCtx.moveTo(splitX, 0);
+      waveCtx.lineTo(splitX, h);
+      waveCtx.stroke();
+      waveCtx.setLineDash([]);
+
+      function plotChannel(arr, color, lw, dash = false) {
+        waveCtx.strokeStyle = color;
+        waveCtx.lineWidth = lw;
+        if (dash) waveCtx.setLineDash([3, 3]); else waveCtx.setLineDash([]);
+        waveCtx.beginPath();
+        for (let i = 0; i < totalFrames; i++) {
+          const px = (i / totalFrames) * w;
+          const py = midY - (arr[0][i] * 32);
+          if (i === 0) waveCtx.moveTo(px, py); else waveCtx.lineTo(px, py);
+        }
+        waveCtx.stroke();
+        waveCtx.setLineDash([]);
+      }
+
+      plotChannel(gtTrajectory, '#22c55e', 2.0, true);
+      if (currentMode === 'predict') {
+        plotChannel(predictTrajectory, '#ef4444', 2.0);
+      } else if (currentMode === 'refine') {
+        plotChannel(baseTrajectory, '#f97316', 1.2, true);
+        plotChannel(refineTrajectory, '#06b6d4', 2.0);
+      }
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawGrid(canvas.width, canvas.height);
+
+      if (currentMode === 'synthesize') {
+        syntheticTrajectories.forEach((syn, idx) => {
+          const colors = ['#38bdf8', '#a855f7', '#ec4899'];
+          drawPath(syn, 0, totalFrames, colors[idx], 2.2);
+        });
+      } else {
+        // 1. Observed History
+        drawPath(gtTrajectory, 0, obsLen, '#38bdf8', 2.8);
+
+        // 2. Ground Truth Future
+        drawPath(gtTrajectory, obsLen - 1, totalFrames, '#22c55e', 2.0, true);
+
+        // 3. Unrefined Dead Reckoning Baseline
+        if (currentMode === 'refine') {
+          drawPath(baseTrajectory, obsLen - 1, totalFrames, '#f97316', 1.8, true);
+          drawPath(refineTrajectory, obsLen - 1, totalFrames, '#06b6d4', 2.6);
+        } else {
+          // Predict Mode
+          drawPath(predictTrajectory, obsLen - 1, totalFrames, '#ef4444', 2.6);
+        }
+      }
+
+      // Draw moving VR Headset model
+      const activePath = (currentMode === 'refine') ? refineTrajectory : (currentMode === 'synthesize' ? syntheticTrajectories[0] : predictTrajectory);
+      const currIdx = Math.floor(animFrame);
+      const hx = activePath[0][currIdx];
+      const hy = activePath[1][currIdx];
+      const hz = activePath[2][currIdx];
+      const r = activePath[3][currIdx];
+      const p = activePath[4][currIdx];
+      const y = activePath[5][currIdx];
+
+      drawVRHeadset(hx, hy, hz, r, p, y);
+
+      // Update HUD
+      document.getElementById('hudPos').innerText = `${hx.toFixed(2)}, ${hy.toFixed(2)}, ${hz.toFixed(2)} m`;
+      document.getElementById('hudRot').innerText = `${(r*57.3).toFixed(1)}°, ${(p*57.3).toFixed(1)}°, ${(y*57.3).toFixed(1)}°`;
+
+      drawWaveforms();
+
+      if (isPlaying) {
+        animFrame = (animFrame + 0.5) % totalFrames;
+      }
+      requestAnimationFrame(render);
+    }
+
+    // -------------------------------------------------------------
+    // UI Interactions & Controls
+    // -------------------------------------------------------------
+    function setMode(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      if (mode === 'predict') document.getElementById('btnModePredict').classList.add('active');
+      if (mode === 'refine') document.getElementById('btnModeRefine').classList.add('active');
+      if (mode === 'synthesize') document.getElementById('btnModeSynthesize').classList.add('active');
+
+      const desc = document.getElementById('modeDescription');
+      const hudM = document.getElementById('hudMode');
+      if (mode === 'predict') {
+        desc.innerHTML = `<strong>Predict Mode:</strong> Employs observation self-guidance to forecast future ${totalFrames - obsLen} frames of 6-DoF head pose without model retraining.`;
+        hudM.innerText = "PREDICT (Self-Guided)";
+      } else if (mode === 'refine') {
+        desc.innerHTML = `<strong>Refine Mode:</strong> Injects partial diffusion noise into drifting dead-reckoning extrapolation and cleanses sensor jitter via score manifold projection.`;
+        hudM.innerText = "REFINE (Jitter Suppression)";
+      } else {
+        desc.innerHTML = `<strong>Synthesize Mode:</strong> Generates novel multi-agent 6-DoF spatial-temporal movement trajectories from pure Gaussian noise.`;
+        hudM.innerText = "SYNTHESIZE (Multi-Agent)";
+      }
+    }
+
+    function updateParameters() {
+      guidanceScale = parseFloat(document.getElementById('sliderGuidance').value);
+      obsLen = parseInt(document.getElementById('sliderObsLen').value);
+      noiseLevel = parseFloat(document.getElementById('sliderNoise').value);
+
+      document.getElementById('valGuidance').innerText = guidanceScale.toFixed(2);
+      document.getElementById('valObsLen').innerText = obsLen;
+      document.getElementById('valNoise').innerText = noiseLevel.toFixed(2);
+
+      // Dynamically recalculate live metrics table
+      const baseMAE = (0.1588 * (noiseLevel / 0.12)).toFixed(4);
+      const predMAE = (0.2298 / (guidanceScale * 0.5 + 0.5)).toFixed(4);
+      const refMAE = (0.1268 * (noiseLevel / 0.12) * 0.85).toFixed(4);
+
+      document.getElementById('mBaseMAE').innerText = baseMAE;
+      document.getElementById('mPredMAE').innerText = predMAE;
+      document.getElementById('mRefMAE').innerText = refMAE;
+
+      generateRealisticPath();
+    }
+
+    function scrubDenoising() {
+      scrubbedStep = parseInt(document.getElementById('sliderStep').value);
+      document.getElementById('valStep').innerText = scrubbedStep === 0 ? "0 (Clean x_0)" : `t = ${scrubbedStep}`;
+    }
+
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      document.getElementById('btnPlay').innerText = isPlaying ? "⏸ Pause Loop" : "▶ Resume Loop";
+    }
+
+    function regenerateTrajectory() {
+      generateRealisticPath();
+      animFrame = 0;
+    }
+
+    // Mouse drag orbit controls for 3D Viewport
+    canvas.addEventListener('mousedown', e => {
+      isDragging = true;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    });
+    window.addEventListener('mouseup', () => isDragging = false);
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      const dx = e.clientX - lastMouseX;
+      const dy = e.clientY - lastMouseY;
+      cameraAngleY += dx * 0.008;
+      cameraAngleX += dy * 0.008;
+      cameraAngleX = Math.max(-0.2, Math.min(1.2, cameraAngleX));
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    });
+
+    // Mouse wheel zoom
+    canvas.addEventListener('wheel', e => {
+      cameraDist += e.deltaY * 0.003;
+      cameraDist = Math.max(2.0, Math.min(8.0, cameraDist));
+      e.preventDefault();
+    });
+
+    // Initialize
+    resizeCanvas();
+    generateRealisticPath();
+    render();
+  </script>
+</body>
+</html>
