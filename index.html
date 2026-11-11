@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SR University | AR/VR Lab Execution Hub & Capstone</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Outfit', sans-serif; background-color: #0B0F19; color: #F3F4F6; }
+    .font-mono { font-family: 'Fira Code', monospace; }
+    .glass-card { background: rgba(18, 24, 38, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .tab-btn.active { background: #3B82F6; color: white; border-color: #60A5FA; }
+    canvas { border-radius: 0.75rem; width: 100%; height: 100%; outline: none; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Header Navigation Bar -->
+  <header class="glass-card sticky top-0 z-50 border-b border-gray-800 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-amber-500 p-[2px]">
+        <div class="w-full h-full bg-[#0B0F19] rounded-[10px] flex items-center justify-center font-bold text-amber-400">
+          AR
+        </div>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold text-white flex items-center gap-2">
+          SR UNIVERSITY <span class="text-xs px-2 py-0.5 rounded bg-blue-900/60 text-blue-300 font-mono">23CS201PE403</span>
+        </h1>
+        <p class="text-xs text-gray-400 font-mono">Augmented & Virtual Reality Interactive Lab Suite | Localhost:3000</p>
+      </div>
+    </div>
+
+    <!-- Direct Assignment Links Bar -->
+    <nav class="flex flex-wrap items-center gap-1.5 text-xs font-mono">
+      <button onclick="switchTab('as2')" id="btn-as2" class="tab-btn active px-3 py-1.5 rounded-lg border border-gray-700 bg-gray-900 hover:bg-gray-800 transition">
+        Assignment 2 (Sphere)
+      </button>
+      <button onclick="switchTab('as3')" id="btn-as3" class="tab-btn px-3 py-1.5 rounded-lg border border-gray-700 bg-gray-900 hover:bg-gray-800 transition">
+        Assignment 3 (VR Scene)
+      </button>
+      <button onclick="switchTab('as4')" id="btn-as4" class="tab-btn px-3 py-1.5 rounded-lg border border-gray-700 bg-gray-900 hover:bg-gray-800 transition">
+        Assignment 4 (VR Move)
+      </button>
+      <button onclick="switchTab('as6')" id="btn-as6" class="tab-btn px-3 py-1.5 rounded-lg border border-gray-700 bg-gray-900 hover:bg-gray-800 transition">
+        Assignment 6 (ARCore Tap)
+      </button>
+      <button onclick="switchTab('as9')" id="btn-as9" class="tab-btn px-3 py-1.5 rounded-lg border border-gray-700 bg-gray-900 hover:bg-gray-800 transition">
+        Assignment 9 (VR UI)
+      </button>
+      <button onclick="switchTab('capstone')" id="btn-capstone" class="tab-btn px-3 py-1.5 rounded-lg border border-gray-700 bg-gray-900 hover:bg-gray-800 transition text-amber-300">
+        Capstone Swarm
+      </button>
+    </nav>
+  </header>
+
+  <!-- Main Viewport -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+    <!-- ============================================================== -->
+    <!-- TAB 1: ASSIGNMENT 2 (SPHERE ROTATION) -->
+    <!-- ============================================================== -->
+    <div id="tab-as2" class="space-y-6">
+      <div class="glass-card p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-mono text-blue-400 font-semibold uppercase">Assignment 2</span>
+          <h2 class="text-2xl font-extrabold text-white">Rotation of a 3D Sphere using C# in Unity</h2>
+          <p class="text-sm text-gray-300 mt-1">
+            Aim: Continuously rotate a 3D Sphere GameObject via C# script <code class="text-amber-400">SphereRotation.cs</code> using <code class="text-amber-400">transform.Rotate()</code>.
+          </p>
+        </div>
+        <div class="text-xs font-mono bg-blue-950/60 border border-blue-800/80 p-3 rounded-xl">
+          Direct Link: <a href="#assignment2" class="text-blue-400 underline">localhost:3000/#assignment2</a>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- 3D Canvas Viewport -->
+        <div class="lg:col-span-2 glass-card p-4 rounded-2xl flex flex-col h-[460px]">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-800 text-xs font-mono">
+            <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span> SCENE VIEW & PLAY MODE</span>
+            <span class="text-gray-400">Click & Drag to Orbit Camera</span>
+          </div>
+          <div id="canvas-container-as2" class="flex-1 w-full relative mt-2"></div>
+        </div>
+
+        <!-- Unity Inspector & Controls -->
+        <div class="space-y-4">
+          <div class="glass-card p-4 rounded-2xl space-y-4 text-xs font-mono">
+            <div class="text-sm font-bold text-amber-400 border-b border-gray-800 pb-2 flex justify-between">
+              <span>INSPECTOR PANEL</span>
+              <span class="text-emerald-400">PLAY ▶ ACTIVE</span>
+            </div>
+            <div>
+              <span class="text-gray-400 block font-bold">GameObject: RotatingSphere</span>
+              <span class="text-gray-400 block text-[11px]">Tag: Untagged | Layer: Default</span>
+            </div>
+            
+            <div class="space-y-1.5 p-2.5 rounded-xl bg-gray-900/80 border border-gray-800">
+              <span class="text-blue-400 font-bold block">Transform</span>
+              <div class="text-[11px] space-y-1">
+                <div>Position: X=0.00, Y=0.00, Z=0.00</div>
+                <div class="text-emerald-400 font-bold">
+                  Rotation: X=0.00°, Y=<span id="inspector-rot-y">0.00</span>°, Z=0.00° ↻
+                </div>
+                <div>Scale: X=1.50, Y=1.00, Z=1.00 <span class="text-gray-400">(Elongated)</span></div>
+              </div>
+            </div>
+
+            <div class="space-y-2 p-2.5 rounded-xl bg-gray-900/80 border border-gray-800">
+              <span class="text-blue-400 font-bold block">SphereRotation (C# Script)</span>
+              <div>
+                <label class="block text-gray-300">Rotation Speed (deg/s): <span id="val-speed" class="text-amber-400 font-bold">50</span></label>
+                <input id="slider-speed" type="range" min="10" max="200" value="50" class="w-full mt-1 accent-amber-500" oninput="updateSpeed(this.value)">
+              </div>
+              <div class="flex gap-2 pt-1">
+                <button onclick="toggleAxis('y')" id="btn-axis-y" class="px-2 py-1 rounded bg-blue-600 text-white font-bold">Y-Axis (Active)</button>
+                <button onclick="toggleAxis('x')" id="btn-axis-x" class="px-2 py-1 rounded bg-gray-800 text-gray-300">X-Axis</button>
+                <button onclick="toggleAxis('z')" id="btn-axis-z" class="px-2 py-1 rounded bg-gray-800 text-gray-300">Z-Axis</button>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-gray-900/80 border border-gray-800 space-y-1">
+              <span class="text-blue-400 font-bold block">Treasure Hunt Hierarchy</span>
+              <div class="text-[11px] text-gray-300 space-y-0.5">
+                <div>├── Ground (Plane, MeshCollider)</div>
+                <div>├── Player (Capsule, Rigidbody)</div>
+                <div>├── Obstacle.prefab [x3 Instances]</div>
+                <div>└── Collectible.prefab [x5 Trigger Spheres]</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 2: ASSIGNMENT 3 (OPENXR & VR SCENE) -->
+    <!-- ============================================================== -->
+    <div id="tab-as3" class="hidden space-y-6">
+      <div class="glass-card p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-mono text-indigo-400 font-semibold uppercase">Assignment 3</span>
+          <h2 class="text-2xl font-extrabold text-white">Basic VR Scene with XR Origin & XR Device Simulator</h2>
+          <p class="text-sm text-gray-300 mt-1">OpenXR enabled, Khronos Simple Controller Profile, XR Origin (Camera Offset), Headset-Free Simulator.</p>
+        </div>
+        <div class="text-xs font-mono bg-indigo-950/60 border border-indigo-800/80 p-3 rounded-xl">
+          Direct Link: <a href="#assignment3" class="text-indigo-400 underline">localhost:3000/#assignment3</a>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 glass-card p-4 rounded-2xl flex flex-col h-[460px]">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-800 text-xs font-mono">
+            <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse"></span> VR STEREOSCOPIC CAMERA SIMULATOR</span>
+            <span class="text-gray-400">Move mouse inside box to rotate VR Headset</span>
+          </div>
+          <div id="canvas-container-as3" class="flex-1 w-full relative mt-2"></div>
+        </div>
+
+        <div class="glass-card p-4 rounded-2xl space-y-4 text-xs font-mono">
+          <div class="text-sm font-bold text-indigo-400 border-b border-gray-800 pb-2">XR DEVICE SIMULATOR</div>
+          <div class="p-3 rounded-xl bg-gray-900 border border-gray-800 space-y-2">
+            <div>OpenXR Plugin: <span class="text-emerald-400 font-bold">ACTIVE</span></div>
+            <div>Interaction Profile: <span class="text-amber-400 font-bold">Khronos Simple</span></div>
+            <div>XR Origin Rig: <span class="text-blue-400 font-bold">(0, 0, 0)</span></div>
+            <div>Camera Eye Offset: <span class="text-gray-300">1.36m (Standing)</span></div>
+          </div>
+          <div class="p-3 rounded-xl bg-gray-900 border border-gray-800 space-y-2">
+            <span class="text-indigo-400 font-bold block">Live Headset Orientation</span>
+            <div>Yaw (Horizontal): <span id="vr-yaw" class="text-emerald-400 font-bold">0.0°</span></div>
+            <div>Pitch (Vertical): <span id="vr-pitch" class="text-emerald-400 font-bold">0.0°</span></div>
+            <div>Left Controller: <span class="text-emerald-400">Connected (6-DOF)</span></div>
+            <div>Right Controller: <span class="text-emerald-400">Connected (6-DOF)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 3: ASSIGNMENT 4 (CONTINUOUS VR MOVEMENT) -->
+    <!-- ============================================================== -->
+    <div id="tab-as4" class="hidden space-y-6">
+      <div class="glass-card p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-mono text-emerald-400 font-semibold uppercase">Assignment 4</span>
+          <h2 class="text-2xl font-extrabold text-white">Continuous VR Locomotion & Collision Navigation</h2>
+          <p class="text-sm text-gray-300 mt-1">Continuous Move Provider with thumbstick input, smooth WASD movement, and collider boundaries.</p>
+        </div>
+        <div class="text-xs font-mono bg-emerald-950/60 border border-emerald-800/80 p-3 rounded-xl">
+          Direct Link: <a href="#assignment4" class="text-emerald-400 underline">localhost:3000/#assignment4</a>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 glass-card p-4 rounded-2xl flex flex-col h-[460px]">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-800 text-xs font-mono">
+            <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span> 3D VR ENVIRONMENT & LOCOMOTION</span>
+            <span class="text-gray-400">Use WASD or On-Screen Thumbstick to Walk</span>
+          </div>
+          <div id="canvas-container-as4" class="flex-1 w-full relative mt-2"></div>
+        </div>
+
+        <div class="glass-card p-4 rounded-2xl space-y-4 text-xs font-mono">
+          <div class="text-sm font-bold text-emerald-400 border-b border-gray-800 pb-2">CONTINUOUS MOVE PROVIDER</div>
+          <div class="p-3 rounded-xl bg-gray-900 border border-gray-800 space-y-2">
+            <div>Locomotion Speed: <span id="val-loco-speed" class="text-emerald-400 font-bold">2.5 m/s</span></div>
+            <input type="range" min="1" max="6" step="0.5" value="2.5" class="w-full accent-emerald-500" oninput="document.getElementById('val-loco-speed').innerText = this.value + ' m/s'">
+            <div>Head-Relative Direction: <span class="text-blue-400">ENABLED</span></div>
+          </div>
+          <div class="p-3 rounded-xl bg-gray-900 border border-gray-800 space-y-2">
+            <span class="text-emerald-400 font-bold block">Thumbstick Controls</span>
+            <div class="grid grid-cols-3 gap-2 text-center text-sm font-bold">
+              <div></div>
+              <button onclick="movePlayer(0, 0.5)" class="p-2 rounded bg-gray-800 hover:bg-gray-700">W</button>
+              <div></div>
+              <button onclick="movePlayer(-0.5, 0)" class="p-2 rounded bg-gray-800 hover:bg-gray-700">A</button>
+              <button onclick="movePlayer(0, -0.5)" class="p-2 rounded bg-gray-800 hover:bg-gray-700">S</button>
+              <button onclick="movePlayer(0.5, 0)" class="p-2 rounded bg-gray-800 hover:bg-gray-700">D</button>
+            </div>
+            <div class="pt-2 text-center text-gray-400">Player Position: (<span id="player-pos-x">0.0</span>, <span id="player-pos-z">0.0</span>)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 4: ASSIGNMENT 6 (AR FOUNDATION & TAP-TO-PLACE) -->
+    <!-- ============================================================== -->
+    <div id="tab-as6" class="hidden space-y-6">
+      <div class="glass-card p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-mono text-purple-400 font-semibold uppercase">Assignment 6</span>
+          <h2 class="text-2xl font-extrabold text-white">AR Foundation & Google ARCore Tap-to-Place</h2>
+          <p class="text-sm text-gray-300 mt-1">Real-time planar surface detection, screen tap raycast, and 10cm placement cube instantiation.</p>
+        </div>
+        <div class="text-xs font-mono bg-purple-950/60 border border-purple-800/80 p-3 rounded-xl">
+          Direct Link: <a href="#assignment6" class="text-purple-400 underline">localhost:3000/#assignment6</a>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 glass-card p-4 rounded-2xl flex flex-col h-[460px]">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-800 text-xs font-mono">
+            <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse"></span> CAMERA FEED & AR PLANE DETECTION</span>
+            <span class="text-purple-400 font-bold">CLICK ON THE DETECTED SURFACE TO PLACE CUBE</span>
+          </div>
+          <div id="canvas-container-as6" class="flex-1 w-full relative mt-2 cursor-crosshair"></div>
+        </div>
+
+        <div class="glass-card p-4 rounded-2xl space-y-4 text-xs font-mono">
+          <div class="text-sm font-bold text-purple-400 border-b border-gray-800 pb-2">AR FOUNDATION PIPELINE</div>
+          <div class="p-3 rounded-xl bg-gray-900 border border-gray-800 space-y-2">
+            <div>AR Session: <span class="text-emerald-400 font-bold">TRACKING ACTIVE</span></div>
+            <div>AR Plane Manager: <span class="text-emerald-400 font-bold">Horizontal Plane Detected</span></div>
+            <div>AR Raycast Manager: <span class="text-purple-400 font-bold">PlaneWithinPolygon Ready</span></div>
+          </div>
+          <div class="p-3 rounded-xl bg-gray-900 border border-gray-800 space-y-2">
+            <span class="text-purple-400 font-bold block">TapToPlace.cs Status</span>
+            <div>Cubes Placed: <span id="ar-cube-count" class="text-amber-400 font-bold">0</span></div>
+            <button onclick="clearARCubes()" class="w-full py-1.5 rounded bg-gray-800 hover:bg-gray-700 text-gray-300">Clear All Cubes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 5: ASSIGNMENT 9 (VR WORLD SPACE UI & MENUS) -->
+    <!-- ============================================================== -->
+    <div id="tab-as9" class="hidden space-y-6">
+      <div class="glass-card p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-mono text-pink-400 font-semibold uppercase">Assignment 9 (Lab 9 / 12)</span>
+          <h2 class="text-2xl font-extrabold text-white">World Space UI, Interactive Menus & Gaze/Ray Interaction in VR</h2>
+          <p class="text-sm text-gray-300 mt-1">
+            VR Virtual Museum prototype: Floating 3D World Space Canvas, XR Ray Interactor, Gaze-Dwell selection timer, and dynamic Exhibit Information Panels.
+          </p>
+        </div>
+        <div class="text-xs font-mono bg-pink-950/60 border border-pink-800/80 p-3 rounded-xl">
+          Direct Link: <a href="#assignment9" class="text-pink-400 underline">localhost:3000/#assignment9</a>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- 3D VR Museum Viewport -->
+        <div class="lg:col-span-2 glass-card p-4 rounded-2xl flex flex-col h-[520px]">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-800 text-xs font-mono">
+            <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-pink-400 animate-pulse"></span> VR VIRTUAL MUSEUM & WORLD SPACE CANVAS</span>
+            <span class="text-gray-400">Aim Mouse = Controller Ray | Hold on Button = 1.0s Gaze Dwell</span>
+          </div>
+          <div id="canvas-container-as9" class="flex-1 w-full relative mt-2 cursor-pointer">
+            <!-- Center Gaze Reticle Overlay -->
+            <div id="gaze-reticle" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10 flex flex-col items-center">
+              <div class="w-4 h-4 rounded-full border-2 border-white/80 flex items-center justify-center">
+                <div id="gaze-dot" class="w-1.5 h-1.5 rounded-full bg-white"></div>
+              </div>
+              <div id="gaze-dwell-bar" class="w-12 h-1 bg-gray-700 rounded-full mt-1 overflow-hidden opacity-0 transition-opacity">
+                <div id="gaze-dwell-progress" class="h-full bg-pink-500 w-0 transition-all"></div>
+              </div>
+            </div>
+          </div>
+          <!-- On-Canvas Controls Bar -->
+          <div class="pt-3 border-t border-gray-800 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+            <div class="flex items-center gap-2">
+              <span class="text-gray-400">Interaction Mode:</span>
+              <button onclick="setUIMode('ray')" id="btn-mode-ray" class="px-2.5 py-1 rounded bg-pink-600 text-white font-bold">Controller Ray</button>
+              <button onclick="setUIMode('gaze')" id="btn-mode-gaze" class="px-2.5 py-1 rounded bg-gray-800 text-gray-300">Gaze Dwell (1.0s)</button>
+            </div>
+            <div class="text-gray-400">XR Interaction Toolkit 3.0</div>
+          </div>
+        </div>
+
+        <!-- Unity Inspector & Exhibit Information Panel -->
+        <div class="space-y-4">
+          <div class="glass-card p-4 rounded-2xl space-y-4 text-xs font-mono">
+            <div class="text-sm font-bold text-pink-400 border-b border-gray-800 pb-2 flex justify-between">
+              <span>WORLD SPACE UI INSPECTOR</span>
+              <span class="text-emerald-400">ACTIVE</span>
+            </div>
+
+            <div class="space-y-1.5 p-2.5 rounded-xl bg-gray-900 border border-gray-800">
+              <span class="text-pink-400 font-bold block">Canvas (World Space)</span>
+              <div>Render Mode: <span class="text-emerald-400 font-bold">World Space</span></div>
+              <div>Position: <span class="text-gray-300">(0.0, 1.4, 2.0)m</span></div>
+              <div>Scale: <span class="text-gray-300">(0.002, 0.002, 0.002)</span></div>
+              <div>Event Camera: <span class="text-blue-400">XR Main Camera</span></div>
+              <div>Raycaster: <span class="text-gray-300">TrackedDeviceGraphicRaycaster</span></div>
+            </div>
+
+            <!-- Dynamic Exhibit Information Display Panel -->
+            <div id="vr-museum-details" class="p-3 rounded-xl bg-gray-900 border border-pink-900/60 space-y-2">
+              <span id="museum-panel-title" class="text-sm font-bold text-pink-400 block">🏛️ Museum Lobby</span>
+              <p id="museum-panel-desc" class="text-gray-300 text-[11px] leading-relaxed">
+                Welcome to the SR University VR Virtual Museum. Use your controller ray or gaze reticle to select an interactive exhibit panel.
+              </p>
+              <div id="museum-panel-status" class="text-[10px] text-emerald-400 font-bold pt-1">
+                ✓ Ready for interaction
+              </div>
+            </div>
+
+            <!-- Direct Menu Trigger Buttons -->
+            <div class="space-y-2 p-2.5 rounded-xl bg-gray-900 border border-gray-800">
+              <span class="text-gray-400 font-bold block">Virtual Menu Controls (Click or Gaze)</span>
+              <div class="grid grid-cols-1 gap-2">
+                <button onclick="triggerVRMenu('start')" class="w-full py-2 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-left flex justify-between">
+                  <span>▶ 1. Start Guided Exhibit Tour</span>
+                  <span class="text-[10px] text-blue-200">Load</span>
+                </button>
+                <button onclick="triggerVRMenu('info')" class="w-full py-2 px-3 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold text-left flex justify-between">
+                  <span>ℹ 2. Open Exhibit Info Panel</span>
+                  <span class="text-[10px] text-pink-200">Toggle</span>
+                </button>
+                <button onclick="triggerVRMenu('back')" class="w-full py-2 px-3 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold text-left flex justify-between">
+                  <span>◀ 3. Back to Lobby / Close</span>
+                  <span class="text-[10px] text-gray-400">Reset</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 6: CAPSTONE SWARM -->
+    <!-- ============================================================== -->
+    <div id="tab-capstone" class="hidden space-y-6">
+      <div class="glass-card p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-mono text-amber-400 font-semibold uppercase">Capstone Project</span>
+          <h2 class="text-2xl font-extrabold text-white">Autonomous Collaborative Robot Swarm Simulator & Digital Twin</h2>
+          <p class="text-sm text-gray-300 mt-1">Multi-Agent Pathfinding (MAPF) with Conflict-Based Search (CBS) and Space-Time A*.</p>
+        </div>
+        <div class="text-xs font-mono bg-amber-950/60 border border-amber-800/80 p-3 rounded-xl">
+          Direct Link: <a href="#capstone" class="text-amber-400 underline">localhost:3000/#capstone</a>
+        </div>
+      </div>
+      <div class="glass-card p-6 rounded-2xl text-center space-y-4">
+        <p class="text-gray-300 text-sm">The Capstone Swarm Digital Twin is ready. Click below to launch the standalone interactive simulation canvas.</p>
+        <a href="https://htmlpreview.github.io/?https://github.com/2303A52440/capstone-project_3/blob/main/index.html" target="_blank" class="inline-block px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-black font-bold font-mono text-sm transition">
+          Launch Full CBS Swarm Simulator Canvas &rarr;
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Interactive Three.js Logic for all 5 assignments -->
+  <script>
+    let currentSpeed = 50.0;
+    let activeAxis = 'y';
+    let rotAngle = 0;
+    let scene2, camera2, renderer2, sphere2;
+    let scene3, camera3, renderer3, vrRoom3, vrHead3;
+    let scene4, camera4, renderer4, player4, obstacles4 = [];
+    let scene6, camera6, renderer6, arPlane6, arCubes6 = [];
+    let scene9, camera9, renderer9, menuPlane9;
+
+    function switchTab(tabId) {
+      document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      
+      const target = document.getElementById('tab-' + tabId);
+      if (target) target.classList.remove('hidden');
+      const btn = document.getElementById('btn-' + tabId);
+      if (btn) btn.classList.add('active');
+
+      window.location.hash = tabId === 'as2' ? 'assignment2' :
+                            tabId === 'as3' ? 'assignment3' :
+                            tabId === 'as4' ? 'assignment4' :
+                            tabId === 'as6' ? 'assignment6' :
+                            tabId === 'as9' ? 'assignment9' : 'capstone';
+    }
+
+    // Init from URL hash
+    window.addEventListener('DOMContentLoaded', () => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash.includes('2')) switchTab('as2');
+      else if (hash.includes('3')) switchTab('as3');
+      else if (hash.includes('4')) switchTab('as4');
+      else if (hash.includes('6')) switchTab('as6');
+      else if (hash.includes('9')) switchTab('as9');
+      else if (hash.includes('capstone')) switchTab('capstone');
+      else switchTab('as2');
+
+      initAssignment2();
+      initAssignment3();
+      initAssignment4();
+      initAssignment6();
+      initAssignment9();
+    });
+
+    // -------------------------------------------------------------
+    // ASSIGNMENT 2: SPHERE ROTATION
+    // -------------------------------------------------------------
+    function initAssignment2() {
+      const container = document.getElementById('canvas-container-as2');
+      scene2 = new THREE.Scene();
+      camera2 = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+      camera2.position.set(0, 1.5, 4);
+      camera2.lookAt(0, 0, 0);
+
+      renderer2 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer2.setSize(container.clientWidth, container.clientHeight);
+      container.appendChild(renderer2.domElement);
+
+      // Grid ground
+      const grid = new THREE.GridHelper(6, 12, 0x3B82F6, 0x1E293B);
+      grid.position.y = -1;
+      scene2.add(grid);
+
+      // Elongated Sphere (Scale X=1.5, Y=1, Z=1)
+      const geometry = new THREE.SphereGeometry(1, 32, 24);
+      geometry.scale(1.5, 1.0, 1.0);
+      const material = new THREE.MeshStandardMaterial({
+        color: 0x3B82F6,
+        wireframe: false,
+        roughness: 0.3,
+        metalness: 0.2
+      });
+      sphere2 = new THREE.Mesh(geometry, material);
+      scene2.add(sphere2);
+
+      // Wireframe overlay for crystal-clear rotation visibility
+      const wire = new THREE.WireframeGeometry(geometry);
+      const wireLine = new THREE.LineSegments(wire, new THREE.LineBasicMaterial({ color: 0xF59E0B }));
+      sphere2.add(wireLine);
+
+      // Lights
+      scene2.add(new THREE.AmbientLight(0xffffff, 0.6));
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      dirLight.position.set(5, 10, 7);
+      scene2.add(dirLight);
+
+      let lastTime = performance.now();
+      function animate() {
+        requestAnimationFrame(animate);
+        const now = performance.now();
+        const dt = (now - lastTime) / 1000;
+        lastTime = now;
+
+        const radDelta = THREE.MathUtils.degToRad(currentSpeed * dt);
+        if (activeAxis === 'y') sphere2.rotation.y += radDelta;
+        else if (activeAxis === 'x') sphere2.rotation.x += radDelta;
+        else if (activeAxis === 'z') sphere2.rotation.z += radDelta;
+
+        const deg = (THREE.MathUtils.radToDeg(sphere2.rotation[activeAxis]) % 360).toFixed(1);
+        const rotDisplay = document.getElementById('inspector-rot-y');
+        if (rotDisplay) rotDisplay.innerText = deg;
+
+        renderer2.render(scene2, camera2);
+      }
+      animate();
+    }
+
+    function updateSpeed(v) {
+      currentSpeed = parseFloat(v);
+      document.getElementById('val-speed').innerText = v;
+    }
+
+    function toggleAxis(ax) {
+      activeAxis = ax;
+      ['x', 'y', 'z'].forEach(a => {
+        const btn = document.getElementById('btn-axis-' + a);
+        if (btn) btn.className = a === ax ? 'px-2 py-1 rounded bg-blue-600 text-white font-bold' : 'px-2 py-1 rounded bg-gray-800 text-gray-300';
+      });
+    }
+
+    // -------------------------------------------------------------
+    // ASSIGNMENT 3: VR SCENE
+    // -------------------------------------------------------------
+    function initAssignment3() {
+      const container = document.getElementById('canvas-container-as3');
+      scene3 = new THREE.Scene();
+      camera3 = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 100);
+      camera3.position.set(0, 1.36, 0);
+
+      renderer3 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer3.setSize(container.clientWidth, container.clientHeight);
+      container.appendChild(renderer3.domElement);
+
+      const grid = new THREE.GridHelper(10, 20, 0x6366F1, 0x1E293B);
+      scene3.add(grid);
+
+      // Target boxes around scene
+      for (let i = 0; i < 6; i++) {
+        const cube = new THREE.Mesh(
+          new THREE.BoxGeometry(0.6, 0.6, 0.6),
+          new THREE.MeshStandardMaterial({ color: 0xF59E0B })
+        );
+        const a = (i / 6) * Math.PI * 2;
+        cube.position.set(Math.sin(a) * 3, 0.3, Math.cos(a) * 3);
+        scene3.add(cube);
+      }
+      scene3.add(new THREE.AmbientLight(0xffffff, 0.8));
+
+      container.addEventListener('mousemove', (e) => {
+        const rect = container.getBoundingClientRect();
+        const mouseX = (e.clientX - rect.left) / rect.width - 0.5;
+        const mouseY = (e.clientY - rect.top) / rect.height - 0.5;
+        camera3.rotation.y = -mouseX * Math.PI;
+        camera3.rotation.x = -mouseY * Math.PI * 0.5;
+
+        document.getElementById('vr-yaw').innerText = (THREE.MathUtils.radToDeg(camera3.rotation.y)).toFixed(1) + '°';
+        document.getElementById('vr-pitch').innerText = (THREE.MathUtils.radToDeg(camera3.rotation.x)).toFixed(1) + '°';
+      });
+
+      function anim3() {
+        requestAnimationFrame(anim3);
+        renderer3.render(scene3, camera3);
+      }
+      anim3();
+    }
+
+    // -------------------------------------------------------------
+    // ASSIGNMENT 4: VR CONTINUOUS MOVEMENT
+    // -------------------------------------------------------------
+    let playerX = 0, playerZ = 0;
+    function initAssignment4() {
+      const container = document.getElementById('canvas-container-as4');
+      scene4 = new THREE.Scene();
+      camera4 = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
+      camera4.position.set(0, 6, 8);
+      camera4.lookAt(0, 0, 0);
+
+      renderer4 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer4.setSize(container.clientWidth, container.clientHeight);
+      container.appendChild(renderer4.domElement);
+
+      scene4.add(new THREE.GridHelper(10, 20, 0x10B981, 0x1E293B));
+
+      // Player Rig representation
+      player4 = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.3, 0.3, 1.2, 16),
+        new THREE.MeshStandardMaterial({ color: 0x10B981 })
+      );
+      player4.position.y = 0.6;
+      scene4.add(player4);
+
+      // Obstacles
+      [[-2, -2], [2, 1], [-1, 3]].forEach(pos => {
+        const obs = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xEF4444 }));
+        obs.position.set(pos[0], 0.5, pos[1]);
+        scene4.add(obs);
+      });
+      scene4.add(new THREE.AmbientLight(0xffffff, 0.8));
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'w' || e.key === 'W') movePlayer(0, -0.4);
+        if (e.key === 's' || e.key === 'S') movePlayer(0, 0.4);
+        if (e.key === 'a' || e.key === 'A') movePlayer(-0.4, 0);
+        if (e.key === 'd' || e.key === 'D') movePlayer(0.4, 0);
+      });
+
+      function anim4() {
+        requestAnimationFrame(anim4);
+        renderer4.render(scene4, camera4);
+      }
+      anim4();
+    }
+
+    function movePlayer(dx, dz) {
+      playerX = Math.max(-4, Math.min(4, playerX + dx));
+      playerZ = Math.max(-4, Math.min(4, playerZ + dz));
+      if (player4) {
+        player4.position.x = playerX;
+        player4.position.z = playerZ;
+      }
+      document.getElementById('player-pos-x').innerText = playerX.toFixed(1);
+      document.getElementById('player-pos-z').innerText = playerZ.toFixed(1);
+    }
+
+    // -------------------------------------------------------------
+    // ASSIGNMENT 6: AR TAP TO PLACE
+    // -------------------------------------------------------------
+    function initAssignment6() {
+      const container = document.getElementById('canvas-container-as6');
+      scene6 = new THREE.Scene();
+      camera6 = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
+      camera6.position.set(0, 2, 3);
+      camera6.lookAt(0, 0, 0);
+
+      renderer6 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer6.setSize(container.clientWidth, container.clientHeight);
+      container.appendChild(renderer6.domElement);
+
+      // Detected AR plane (Table)
+      const planeGeo = new THREE.PlaneGeometry(3, 2);
+      const planeMat = new THREE.MeshBasicMaterial({ color: 0x8B5CF6, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
+      arPlane6 = new THREE.Mesh(planeGeo, planeMat);
+      arPlane6.rotation.x = -Math.PI / 2;
+      scene6.add(arPlane6);
+
+      const planeGrid = new THREE.GridHelper(3, 6, 0xA855F7, 0x6D28D9);
+      scene6.add(planeGrid);
+
+      scene6.add(new THREE.AmbientLight(0xffffff, 0.9));
+
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+
+      container.addEventListener('click', (e) => {
+        const rect = container.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera6);
+        const intersects = raycaster.intersectObject(arPlane6);
+
+        if (intersects.length > 0) {
+          const pt = intersects[0].point;
+          // Instantiate 10cm placement cube (0.2 size in visualization)
+          const cube = new THREE.Mesh(
+            new THREE.BoxGeometry(0.2, 0.2, 0.2),
+            new THREE.MeshStandardMaterial({ color: 0xFBBF24 })
+          );
+          cube.position.set(pt.x, 0.1, pt.z);
+          scene6.add(cube);
+          arCubes6.push(cube);
+          document.getElementById('ar-cube-count').innerText = arCubes6.length;
+        }
+      });
+
+      function anim6() {
+        requestAnimationFrame(anim6);
+        renderer6.render(scene6, camera6);
+      }
+      anim6();
+    }
+
+    function clearARCubes() {
+      arCubes6.forEach(c => scene6.remove(c));
+      arCubes6 = [];
+      document.getElementById('ar-cube-count').innerText = 0;
+    }
+
+    // -------------------------------------------------------------
+    // ASSIGNMENT 9: VR WORLD SPACE UI & VIRTUAL MUSEUM
+    // -------------------------------------------------------------
+    let uiInteractionMode = 'ray';
+    let gazeDwellTimer = null;
+    let gazeStartTime = 0;
+    let hoveredButton = null;
+
+    function setUIMode(mode) {
+      uiInteractionMode = mode;
+      document.getElementById('btn-mode-ray').className = mode === 'ray' ? 'px-2.5 py-1 rounded bg-pink-600 text-white font-bold' : 'px-2.5 py-1 rounded bg-gray-800 text-gray-300';
+      document.getElementById('btn-mode-gaze').className = mode === 'gaze' ? 'px-2.5 py-1 rounded bg-pink-600 text-white font-bold' : 'px-2.5 py-1 rounded bg-gray-800 text-gray-300';
+      document.getElementById('gaze-dwell-bar').style.opacity = mode === 'gaze' ? '1' : '0';
+    }
+
+    function triggerVRMenu(action) {
+      const title = document.getElementById('museum-panel-title');
+      const desc = document.getElementById('museum-panel-desc');
+      const status = document.getElementById('museum-panel-status');
+
+      if (action === 'start') {
+        title.innerText = '🚀 Guided Museum Tour Active';
+        desc.innerText = 'Now touring Exhibit #1: "Autonomous Swarm Robotics Digital Twin". Conflict-Based Search ensures all museum AGVs traverse without collision.';
+        status.innerHTML = '<span class="text-blue-400">● Tour Playing (Speed 1.0x)</span>';
+      } else if (action === 'info') {
+        title.innerText = 'ℹ️ Exhibit Information: Multi-Agent VR';
+        desc.innerText = 'World Space UI allows UI elements to exist within the 3D game coordinates at (0, 1.4, 2.0). Ray interactor and Gaze Dwell provide seamless accessibility without physical controllers.';
+        status.innerHTML = '<span class="text-pink-400">● Information Panel Expanded</span>';
+      } else if (action === 'back') {
+        title.innerText = '🏛️ Museum Central Lobby';
+        desc.innerText = 'Welcome to the SR University VR Virtual Museum. Use your controller ray or gaze reticle to select an interactive exhibit panel.';
+        status.innerHTML = '<span class="text-emerald-400">✓ Panel Closed / Idle in Lobby</span>';
+      }
+    }
+
+    function initAssignment9() {
+      const container = document.getElementById('canvas-container-as9');
+      scene9 = new THREE.Scene();
+      camera9 = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
+      camera9.position.set(0, 1.4, 0); // Eye height 1.4m
+
+      renderer9 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer9.setSize(container.clientWidth, container.clientHeight);
+      container.appendChild(renderer9.domElement);
+
+      // Museum Floor
+      const floor = new THREE.GridHelper(12, 24, 0xEC4899, 0x1E293B);
+      floor.position.y = -0.01;
+      scene9.add(floor);
+
+      // Museum Exhibits on Pedestals
+      // Exhibit 1: Golden Torus / Knot
+      const p1 = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.35, 0.9, 16), new THREE.MeshStandardMaterial({ color: 0x334155 }));
+      p1.position.set(-1.8, 0.45, 2.8);
+      scene9.add(p1);
+      const e1 = new THREE.Mesh(new THREE.TorusKnotGeometry(0.2, 0.06, 64, 16), new THREE.MeshStandardMaterial({ color: 0xF59E0B, metalness: 0.8, roughness: 0.2 }));
+      e1.position.set(-1.8, 1.15, 2.8);
+      scene9.add(e1);
+
+      // Exhibit 2: Cyber Icosahedron
+      const p2 = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.35, 0.9, 16), new THREE.MeshStandardMaterial({ color: 0x334155 }));
+      p2.position.set(1.8, 0.45, 2.8);
+      scene9.add(p2);
+      const e2 = new THREE.Mesh(new THREE.IcosahedronGeometry(0.25, 0), new THREE.MeshStandardMaterial({ color: 0x06B6D4, wireframe: true }));
+      e2.position.set(1.8, 1.15, 2.8);
+      scene9.add(e2);
+
+      // Floating World Space Canvas (2.0m ahead)
+      const canvasGroup = new THREE.Group();
+      canvasGroup.position.set(0, 1.4, 2.2);
+
+      // Canvas Frame
+      const frameGeo = new THREE.PlaneGeometry(1.6, 1.1);
+      const frameMat = new THREE.MeshStandardMaterial({ color: 0x0F172A, roughness: 0.4, side: THREE.DoubleSide });
+      const frameMesh = new THREE.Mesh(frameGeo, frameMat);
+      canvasGroup.add(frameMesh);
+
+      // Glowing Canvas Border
+      const border = new THREE.LineSegments(
+        new THREE.EdgesGeometry(frameGeo),
+        new THREE.LineBasicMaterial({ color: 0xEC4899, linewidth: 2 })
+      );
+      canvasGroup.add(border);
+
+      // Three World Space Buttons
+      const btnGeo = new THREE.PlaneGeometry(1.3, 0.22);
+      const btnMats = [
+        new THREE.MeshBasicMaterial({ color: 0x2563EB }),
+        new THREE.MeshBasicMaterial({ color: 0xDB2777 }),
+        new THREE.MeshBasicMaterial({ color: 0x475569 })
+      ];
+      const buttons9 = [];
+      const buttonActions = ['start', 'info', 'back'];
+
+      [0.28, 0.0, -0.28].forEach((y, i) => {
+        const b = new THREE.Mesh(btnGeo, btnMats[i]);
+        b.position.set(0, y, 0.02);
+        b.userData = { action: buttonActions[i], index: i, defaultColor: btnMats[i].color.getHex() };
+        canvasGroup.add(b);
+        buttons9.push(b);
+      });
+
+      scene9.add(canvasGroup);
+
+      // Controller Ray Line
+      const rayGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0.2, 0.9, 0.4), new THREE.Vector3(0, 1.4, 2.2)]);
+      const rayMat = new THREE.LineBasicMaterial({ color: 0xEC4899, transparent: true, opacity: 0.8 });
+      const rayLine = new THREE.Line(rayGeo, rayMat);
+      scene9.add(rayLine);
+
+      // Lights
+      scene9.add(new THREE.AmbientLight(0xffffff, 0.7));
+      const spot = new THREE.PointLight(0xEC4899, 1.5, 10);
+      spot.position.set(0, 3, 2);
+      scene9.add(spot);
+
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+
+      container.addEventListener('mousemove', (e) => {
+        const rect = container.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera9);
+        const hits = raycaster.intersectObjects(buttons9);
+
+        // Update Ray Line End Point
+        if (hits.length > 0) {
+          const hit = hits[0];
+          const pts = [new THREE.Vector3(0.25, 0.9, 0.4), hit.point];
+          rayLine.geometry.setFromPoints(pts);
+
+          const hovered = hit.object;
+          if (hovered !== hoveredButton) {
+            if (hoveredButton) hoveredButton.material.color.setHex(hoveredButton.userData.defaultColor);
+            hoveredButton = hovered;
+            hovered.material.color.setHex(0x10B981); // Highlight green
+            gazeStartTime = performance.now();
+          }
+        } else {
+          const defaultTarget = new THREE.Vector3(mouse.x * 1.5, 1.4 + mouse.y * 0.8, 2.2);
+          rayLine.geometry.setFromPoints([new THREE.Vector3(0.25, 0.9, 0.4), defaultTarget]);
+          if (hoveredButton) {
+            hoveredButton.material.color.setHex(hoveredButton.userData.defaultColor);
+            hoveredButton = null;
+            document.getElementById('gaze-dwell-progress').style.width = '0%';
+          }
+        }
+      });
+
+      // Click to select
+      container.addEventListener('click', () => {
+        if (hoveredButton) {
+          triggerVRMenu(hoveredButton.userData.action);
+        }
+      });
+
+      function anim9() {
+        requestAnimationFrame(anim9);
+        e1.rotation.y += 0.015;
+        e2.rotation.x += 0.01;
+        e2.rotation.y += 0.01;
+
+        // Gaze Dwell Logic
+        if (uiInteractionMode === 'gaze' && hoveredButton) {
+          const elapsed = (performance.now() - gazeStartTime) / 1000;
+          const pct = Math.min(100, (elapsed / 1.0) * 100);
+          document.getElementById('gaze-dwell-progress').style.width = pct + '%';
+          if (elapsed >= 1.0) {
+            triggerVRMenu(hoveredButton.userData.action);
+            gazeStartTime = performance.now() + 500; // prevent rapid retrigger
+          }
+        }
+
+        renderer9.render(scene9, camera9);
+      }
+      anim9();
+    }
+  </script>
+</body>
+</html>
